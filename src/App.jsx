@@ -265,11 +265,11 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: "980px", margin: "0 auto", padding: "1.5rem", fontFamily: "var(--font-sans)" }}>
-  <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0px" }}>
-        <img src={logo} alt="What2Buy!" style={{ height: "150px" }} />
-       
-         <p style={{ color: "var(--text-primary)", fontWeight: 600, margin: 0 }}>Filter by what matters, compare prices, buy where it's cheapest.</p>
-      </div>
+ <div style={{ marginBottom: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "8px" }}>
+    <img src={logo} alt="What2Buy!" style={{ height: "100px", maxWidth: "90%" }} />
+
+    <p style={{ color: "var(--text-primary)", fontWeight: 600, margin: 0 }}>Filter by what matters, compare prices, buy where it's cheapest.</p>
+</div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "1.5rem", background: "var(--surface-1)", padding: "1rem", borderRadius: "12px" }}>
         <div>
