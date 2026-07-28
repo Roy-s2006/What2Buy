@@ -1,0 +1,30 @@
+:root {
+--surface-2: #fffdf9;
+--surface-1: #ede5d3;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9a9a9a;
+  --text-success: #0f6e56;
+  --bg-success: #e1f5ee;
+  --border: #e5e5e3;
+  --border-strong: #c9c9c6;
+  --font-sans: system-ui, sans-serif;
+  --font-mono: monospace;
+}
+body { margin: 0; background: #f5f0e6; }
+input[type="range"] {
+  accent-color: #8b6b3f;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.laptop-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: fadeIn 0.4s ease backwards;
+}
+.laptop-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  border-color: #a0783f;
+}
