@@ -1,17 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import logo from "./assets/logo.png";
-import { LAPTOPS } from "./laptops.js";
+import Papa from "papaparse";
 import sortIcon from "./assets/sort.png";
-// Add your laptops here, one object per laptop, separated by commas.
-// Copy the example below, edit the values, and keep going.
-//
-// useCase must be exactly one of: "student", "office", "gaming", "creative"
-//
-// { id: 1, name: "Acer Aspire 5", brand: "Acer", price: 42999, ram: 8, storage: 512, screen: 15.6, rating: 4.2, useCase: "student", battery: 9, weight: 1.7,
-//   prices: { Amazon: 42999, Flipkart: 43499, Croma: 43999 } },
-// { id: 1, name: "Acer Aspire 5", ..., image: "https://example.com/acer-aspire-5.jpg",
-//   prices: { Amazon: 42999, Flipkart: 43499 } },
 
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQvAj07HmYX9cp5R98eo5-t9YBpIcuybIFPADmXtUq2LWBgYgMn5ZtoZybTfrm5E43K0PUu6Z766sMo/pub?gid=0&single=true&output=csv";
 
 const USE_CASES = [
   { value: "all", label: "Any use" },
@@ -36,11 +28,10 @@ function formatINR(n) {
 function LaptopCard({ laptop }) {
   const [expanded, setExpanded] = useState(false);
   const getPrice = (d) => (typeof d === "object" ? d.price : d);
-const bestStore = Object.entries(laptop.prices).sort((a, b) => getPrice(a[1]) - getPrice(b[1]))[0];
-bestStore[1] = getPrice(bestStore[1]);
+  const bestStore = Object.entries(laptop.prices).sort((a, b) => getPrice(a[1]) - getPrice(b[1]))[0];
+  bestStore[1] = getPrice(bestStore[1]);
 
   return (
-    
     <div className="laptop-card" style={{
       background: "var(--surface-2)",
       border: "0.5px solid var(--border)",
@@ -53,7 +44,7 @@ bestStore[1] = getPrice(bestStore[1]);
       <img
         src={laptop.image || "https://via.placeholder.com/300x200?text=No+Image"}
         alt={laptop.name}
-         loading="lazy"
+        loading="lazy"
         style={{ width: "100%", height: "160px", objectFit: "contain", background: "#c4b08a", borderRadius: "8px" }}
       />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -92,65 +83,111 @@ bestStore[1] = getPrice(bestStore[1]);
       </button>
 
       {expanded && (
-  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "2px" }}>
-    {Object.entries(laptop.prices).map(([store, data]) => {
-      const price = getPrice(data);
-      const url = typeof data === "object" ? data.url : null;
-      const isBest = price === bestStore[1];
-      const rowStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13.5px", padding: "6px 10px", background: isBest ? "var(--bg-success)" : "var(--surface-1)", borderRadius: "6px", textDecoration: "none", cursor: url ? "pointer" : "default" };
-      const content = (
-        <>
-          <span style={{ color: isBest ? "var(--text-success)" : "var(--text-secondary)" }}>{store}</span>
-          <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>{formatINR(price)}</span>
-        </>
-      );
-      return url
-        ? <a key={store} href={url} target="_blank" rel="noopener sponsored" style={rowStyle}>{content}</a>
-        : <div key={store} style={rowStyle}>{content}</div>;
-    })}
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "2px" }}>
+          {Object.entries(laptop.prices).map(([store, data]) => {
+            const price = getPrice(data);
+            const url = typeof data === "object" ? data.url : null;
+            const isBest = price === bestStore[1];
+            const rowStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13.5px", padding: "6px 10px", background: isBest ? "var(--bg-success)" : "var(--surface-1)", borderRadius: "6px", textDecoration: "none", cursor: url ? "pointer" : "default" };
+            const content = (
+              <>
+                <span style={{ color: isBest ? "var(--text-success)" : "var(--text-secondary)" }}>{store}</span>
+                <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>{formatINR(price)}</span>
+              </>
+            );
+            return url
+              ? <a key={store} href={url} target="_blank" rel="noopener sponsored" style={rowStyle}>{content}</a>
+              : <div key={store} style={rowStyle}>{content}</div>;
+          })}
           <p style={{ fontSize: "11.5px", color: "var(--text-muted)", margin: "4px 0 0" }}>Sample prices for demo. Wire these to real affiliate links or a price API later.</p>
         </div>
       )}
     </div>
   );
 }
-const BRANDS = ["all", ...new Set(LAPTOPS.map(l => l.brand))].sort((a, b) => a === "all" ? -1 : a.localeCompare(b));
+
 export default function App() {
+  const [LAPTOPS, setLaptops] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [useCase, setUseCase] = useState("all");
   const [maxPrice, setMaxPrice] = useState(400000);
   const [minRam, setMinRam] = useState(0);
   const [sortBy, setSortBy] = useState("recommended");
   const [brand, setBrand] = useState("all");
 
+  useEffect(() => {
+    fetch(SHEET_URL)
+      .then(res => res.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+        const laptops = parsed.data.map(row => ({
+          id: Number(row.id),
+          name: row.name,
+          brand: row.brand,
+          price: Number(row.price),
+          ram: Number(row.ram),
+          storage: Number(row.storage),
+          screen: Number(row.screen),
+          rating: Number(row.rating),
+          useCase: row.usecase,
+          battery: Number(row.battery),
+          weight: Number(row.weight),
+          gpu: row.gpu,
+          buildQuality: row.buildQuality,
+          backlitKeyboard: row.backlitKeyboard === "TRUE",
+          fingerprintSensor: row.fingerprintSensor === "TRUE",
+          touchscreen: row.touchscreen === "TRUE",
+          image: row.image,
+          prices: {
+            ...(row.amazon_price ? { Amazon: row.amazon_url ? { price: Number(row.amazon_price), url: row.amazon_url } : Number(row.amazon_price) } : {}),
+            ...(row.flipkart_price ? { Flipkart: row.flipkart_url ? { price: Number(row.flipkart_price), url: row.flipkart_url } : Number(row.flipkart_price) } : {}),
+          },
+        }));
+        setLaptops(laptops);
+        setLoading(false);
+      });
+  }, []);
+
+  const BRANDS = useMemo(() => {
+    return ["all", ...new Set(LAPTOPS.map(l => l.brand))].sort((a, b) => a === "all" ? -1 : a.localeCompare(b));
+  }, [LAPTOPS]);
+
   const filtered = useMemo(() => {
-   let list = LAPTOPS.filter(l =>
-  (useCase === "all" || l.useCase === useCase) &&
-  (brand === "all" || l.brand === brand) &&
-  l.price <= maxPrice &&
-  l.ram >= minRam
-);
+    let list = LAPTOPS.filter(l =>
+      (useCase === "all" || l.useCase === useCase) &&
+      (brand === "all" || l.brand === brand) &&
+      l.price <= maxPrice &&
+      l.ram >= minRam
+    );
     if (sortBy === "price_low") list = [...list].sort((a, b) => a.price - b.price);
     if (sortBy === "price_high") list = [...list].sort((a, b) => b.price - a.price);
     if (sortBy === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
     if (sortBy === "ram") list = [...list].sort((a, b) => b.ram - a.ram);
     return list;
- }, [useCase, brand, maxPrice, minRam, sortBy]);
+  }, [LAPTOPS, useCase, brand, maxPrice, minRam, sortBy]);
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: "980px", margin: "0 auto", padding: "1.5rem", fontFamily: "var(--font-sans)" }}>
+        <p style={{ textAlign: "center", padding: "3rem 0", color: "var(--text-secondary)" }}>Loading laptops...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: "980px", margin: "0 auto", padding: "1.5rem", fontFamily: "var(--font-sans)" }}>
- <div style={{ marginBottom: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "8px" }}>
-    <img src={logo} alt="What2Buy!" style={{ height: "100px", maxWidth: "90%" }} />
-
-    <p style={{ color: "var(--text-primary)", fontWeight: 600, margin: 0 }}>Filter by what matters, compare prices, buy where it's cheapest.</p>
-</div>
+      <div style={{ marginBottom: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "8px" }}>
+        <img src={logo} alt="What2Buy!" style={{ height: "100px", maxWidth: "90%" }} />
+        <p style={{ color: "var(--text-primary)", fontWeight: 600, margin: 0 }}>Filter by what matters, compare prices, buy where it's cheapest.</p>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "1.5rem", background: "var(--surface-1)", padding: "1rem", borderRadius: "12px" }}>
         <div>
-  <label style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Brand</label>
-  <select value={brand} onChange={e => setBrand(e.target.value)} style={{ width: "100%" }}>
-    {BRANDS.map(b => <option key={b} value={b}>{b === "all" ? "Any brand" : b}</option>)}
-  </select>
-</div>
+          <label style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Brand</label>
+          <select value={brand} onChange={e => setBrand(e.target.value)} style={{ width: "100%" }}>
+            {BRANDS.map(b => <option key={b} value={b}>{b === "all" ? "Any brand" : b}</option>)}
+          </select>
+        </div>
         <div>
           <label style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Use case</label>
           <select value={useCase} onChange={e => setUseCase(e.target.value)} style={{ width: "100%" }}>
@@ -166,15 +203,15 @@ export default function App() {
           <input type="range" min="0" max="16" step="8" value={minRam} onChange={e => setMinRam(Number(e.target.value))} style={{ width: "100%" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", position: "relative", width: "40px", height: "40px" }}>
-  <img src={sortIcon} alt="Sort" style={{ width: "40px", height: "40px" }} />
-  <select
-    value={sortBy}
-    onChange={e => setSortBy(e.target.value)}
-    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
-  >
-    {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-  </select>
-</div>      
+          <img src={sortIcon} alt="Sort" style={{ width: "40px", height: "40px" }} />
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
+          >
+            {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
       </div>
 
       <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "1rem" }}>{filtered.length} laptops match</p>
