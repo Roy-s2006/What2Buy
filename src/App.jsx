@@ -110,7 +110,7 @@ export default function App() {
   const [LAPTOPS, setLaptops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [useCase, setUseCase] = useState("all");
-  const [maxPrice, setMaxPrice] = useState(400000);
+  const [maxPrice, setMaxPrice] = useState(100000);
   const [minRam, setMinRam] = useState(0);
   const [sortBy, setSortBy] = useState("recommended");
   const [brand, setBrand] = useState("all");
