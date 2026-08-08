@@ -196,7 +196,7 @@ export default function App() {
         </div>
         <div>
           <label style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Max price: {formatINR(maxPrice)}</label>
-          <input type="range" min="30000" max="400000" step="5000" value={maxPrice} onChange={e => setMaxPrice(Number(e.target.value))} style={{ width: "100%" }} />
+          <input type="range" min="30000" max="100000" step="5000" value={maxPrice} onChange={e => setMaxPrice(Number(e.target.value))} style={{ width: "100%" }} />
         </div>
         <div>
           <label style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Min RAM: {minRam}GB</label>
